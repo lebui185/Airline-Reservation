@@ -1,5 +1,6 @@
 body {
     padding-top: 60px;
+    padding-bottom: 8px;
 }
 
 .verify-form .info-title {
@@ -8,4 +9,20 @@ body {
 
 .verify-form .info-content {
 	
+}
+
+.flight-select-form label {
+	font-weight: normal;
+}
+
+form .ng-dirty.ng-invalid {
+	background: #f2dede;
+}
+
+form .ng-touched.ng-invalid {
+	background: #f2dede;
+}
+
+form .ng-touched.ng-valid-date.ng-invalid {
+	background: #f2dede;
 }

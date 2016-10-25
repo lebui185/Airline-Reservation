@@ -40,7 +40,11 @@ angular.module('airlineReservationApp')
             },
             currentForm: 'flightSearchForm',
             departFlightTable: {
-                orderAttr: 'departTime',
+                orderAttr: 'time',
+                orderReverse: false
+            },
+            returnFlightTable: {
+                orderAttr: 'time',
                 orderReverse: false
             }
         };
@@ -101,9 +105,9 @@ angular.module('airlineReservationApp')
             vm.flightSCO.numOfInfants = 0;
         });
 
+        vm.flightType = 'ROUND_TRIP';
 
         vm.flightSCO = {
-            type: 'ONE_WAY',
             departDate: new Date(),
             numOfAdults: 1
         };
@@ -120,17 +124,103 @@ angular.module('airlineReservationApp')
             vm.widget.returnDatePicker.isOpened = true;
         };
 
-        vm.onFlightSearchFormSubmit = function() {
-            console.log(vm.flightSCO);
-            vm.widget.flightSearchForm.isComplete = true;
-            vm.widget.currentForm = 'flightSelectForm';
+        vm.validateTravelDate = function() {
+            if (vm.flightType === 'ROUND_TRIP') {
+                if (vm.flightSCO.returnDate === undefined ||
+                    vm.flightSCO.departDate > vm.flightSCO.returnDate) {
+                    vm.flightSearchForm.departDatePicker.$setValidity('', false);
+                    if (vm.flightSearchForm.returnDatePicker !== undefined) {
+                        vm.flightSearchForm.returnDatePicker.$setValidity('', false);
+                    }
+                } else {
+                    if (vm.flightSCO.departDate !== undefined) {
+                        vm.flightSearchForm.departDatePicker.$setValidity('', true);
+                    }
+                    if (vm.flightSCO.returnDate !== undefined) {
+                        vm.flightSearchForm.returnDatePicker.$setValidity('', true);
+                    }
+                }
+            } else {
+                if (vm.flightSCO.departDate !== undefined) {
+                    vm.flightSearchForm.departDatePicker.$setValidity('', true);
+                }
+            }
         };
 
+        vm.changeFlightType = function(type) {
+            vm.flightType = type;
+            vm.validateTravelDate();
+        };
 
+        vm.isValidFlightSCO = function(flightSCO) {
+            if (flightSCO.departureAirport === undefined) {
+                return false;
+            }
+
+            if (flightSCO.arrivalAirport === undefined) {
+                return false;
+            }
+
+            if (flightSCO.departDate === undefined) {
+                return false;
+            }
+
+            if (vm.flighType === 'ROUND_TRIP') {
+                if (flightSCO.returnDate === undefined) {
+                    return false;
+                }
+                if (flightSCO.departDate > flightSCO.returnDate) {
+                    return false;
+                }
+                return true;
+            }
+            return true;
+        };
+
+        vm.onFlightSearchFormSubmit = function() {
+            if (vm.isValidFlightSCO(vm.flightSCO)) {
+                vm.widget.flightSearchForm.isComplete = true;
+                vm.widget.currentForm = 'flightSelectForm';
+            } else {
+
+            }
+        };
+
+        vm.onDepartFlightSelectChange = function(flight) {
+            vm.selectedDepartFlight = flight;
+        };
 
         // flightSelectForm
 
+        function decodeDepartFlight(hash) {
+            var departFlight = {};
+            var tokens = hash.split(',');
+
+            departFlight.code = tokens[0];
+            departFlight.date = tokens[1];
+            departFlight.class = tokens[2];
+            departFlight.fareType = tokens[3];
+
+            return departFlight;
+        }
+
+        function decodeReturnFlight(hash) {
+            var returnFlight = {};
+            var tokens = hash.split(',');
+
+            returnFlight.code = tokens[0];
+            returnFlight.date = tokens[1];
+            returnFlight.class = tokens[2];
+            returnFlight.fareType = tokens[3];
+
+            return returnFlight;
+        }
+
         vm.onFlightSelectFormSubmit = function() {
+            var departFlight = decodeDepartFlight(vm.departFlightHash);
+            var returnFlight = decodeDepartFlight(vm.returnFlightHash);
+            console.log(departFlight);
+            console.log(returnFlight);
             vm.widget.flightSelectForm.isComplete = true;
             vm.widget.currentForm = 'passengerForm';
         };
@@ -139,84 +229,149 @@ angular.module('airlineReservationApp')
             vm.widget.currentForm = 'flightSearchForm';
         };
 
-        //vm.departFlightsDisplay = [];
-
         vm.departFlights = [{
-            id: 'BL326',
-            departTime: new Date('2016-10-20'),
-            seat: 200,
-            fares: [{
-                type: 'Thương gia linh hoạt',
-                cost: 10
-            }, {
-                type: 'Thương gia tiêu chuẩn',
-                cost: 20
-            }, {
-                type: 'Phổ thông linh hoạt',
-                cost: 30
-            }, {
-                type: 'Phổ thông tiêu chuẩn',
-                cost: 40
-            }]
+            code: "BL326",
+            departureAirport: "SGN",
+            arrivalAirport: "TBB",
+            date: "2016-10-05",
+            time: "08:45:00",
+            class: "Y",
+            fareType: "F",
+            numberOfSeats: 15,
+            fare: 10000
         }, {
-            id: 'BL327',
-            departTime: new Date('2016-10-21'),
-            seat: 300,
-            fares: [{
-                type: 'Thương gia linh hoạt',
-                cost: 10
-            }, {
-                type: 'Thương gia tiêu chuẩn',
-                cost: 20
-            }, {
-                type: 'Phổ thông linh hoạt',
-                cost: 30
-            }, {
-                type: 'Phổ thông tiêu chuẩn',
-                cost: 40
-            }]
+            code: "BL326",
+            departureAirport: "SGN",
+            arrivalAirport: "TBB",
+            date: "2016-10-05",
+            time: "08:45:00",
+            class: "Y",
+            fareType: "E",
+            numberOfSeats: 15,
+            fare: 20000
         }, {
-            id: 'BL328',
-            departTime: new Date('2015-11-22'),
-            seat: 400,
-            fares: [{
-                type: 'Thương gia linh hoạt',
-                cost: 10
-            }, {
-                type: 'Thương gia tiêu chuẩn',
-                cost: 20
-            }, {
-                type: 'Phổ thông linh hoạt',
-                cost: 30
-            }, {
-                type: 'Phổ thông tiêu chuẩn',
-                cost: 40
-            }]
+            code: "BL327",
+            departureAirport: "SGN",
+            arrivalAirport: "TBB",
+            date: "2016-10-05",
+            time: "08:45:00",
+            class: "Y",
+            fareType: "G",
+            numberOfSeats: 15,
+            fare: 300000
         }, {
-            id: 'BL329',
-            departTime: new Date('2015-10-24'),
-            seat: 500,
-            fares: [{
-                type: 'Thương gia linh hoạt',
-                cost: 10
-            }, {
-                type: 'Thương gia tiêu chuẩn',
-                cost: 20
-            }, {
-                type: 'Phổ thông linh hoạt',
-                cost: 30
-            }, {
-                type: 'Phổ thông tiêu chuẩn',
-                cost: 40
-            }]
+            code: "BL326",
+            departureAirport: "SGN",
+            arrivalAirport: "TBB",
+            date: "2016-10-05",
+            time: "08:45:00",
+            class: "C",
+            fareType: "F",
+            numberOfSeats: 15,
+            fare: 40000
+        }, {
+            code: "BL327",
+            departureAirport: "SGN",
+            arrivalAirport: "TBB",
+            date: "2016-10-05",
+            time: "08:45:00",
+            class: "C",
+            fareType: "G",
+            numberOfSeats: 15,
+            fare: 600000
         }];
 
-        vm.returnFlights = [
-            { id: 'BL326', priceClass: 'E', seat: 100, price: 100000 },
-            { id: 'BL326', priceClass: 'F', seat: 20, price: 10000 },
-            { id: 'BL327', priceClass: 'G', seat: 10, price: 500000 },
-            { id: 'BL327', priceClass: 'E', seat: 100, price: 100000 },
-        ];
+        vm.returnFlights = [{
+            code: "BL326",
+            departureAirport: "SGN",
+            arrivalAirport: "TBB",
+            date: "2016-10-05",
+            time: "08:45:00",
+            class: "Y",
+            fareType: "F",
+            numberOfSeats: 15,
+            fare: 10000
+        }, {
+            code: "BL326",
+            departureAirport: "SGN",
+            arrivalAirport: "TBB",
+            date: "2016-10-05",
+            time: "08:45:00",
+            class: "Y",
+            fareType: "E",
+            numberOfSeats: 15,
+            fare: 20000
+        }, {
+            code: "BL327",
+            departureAirport: "SGN",
+            arrivalAirport: "TBB",
+            date: "2016-10-05",
+            time: "08:45:00",
+            class: "Y",
+            fareType: "G",
+            numberOfSeats: 15,
+            fare: 300000
+        }, {
+            code: "BL326",
+            departureAirport: "SGN",
+            arrivalAirport: "TBB",
+            date: "2016-10-05",
+            time: "08:45:00",
+            class: "C",
+            fareType: "F",
+            numberOfSeats: 15,
+            fare: 40000
+        }, {
+            code: "BL327",
+            departureAirport: "SGN",
+            arrivalAirport: "TBB",
+            date: "2016-10-05",
+            time: "08:45:00",
+            class: "C",
+            fareType: "G",
+            numberOfSeats: 15,
+            fare: 600000
+        }];
+
+        function convertFlightToTableFormat(remoteFlights) {
+            var localFlights = [];
+            var i;
+            var j;
+            var isNewFlight = true;
+            var fareAttr;
+            var newFlight;
+
+            for (i = 0; i < remoteFlights.length; i++) {
+                for (j = 0; j < localFlights.length; j++) {
+                    if (remoteFlights[i].code === localFlights[j].code &&
+                        remoteFlights[i].date === localFlights[j].date) {
+                        isNewFlight = false;
+                        break;
+                    }
+                }
+
+                if (isNewFlight) {
+                    fareAttr = remoteFlights[i].class + remoteFlights[i].fareType;
+                    newFlight = {
+                        code: remoteFlights[i].code,
+                        date: remoteFlights[i].date,
+                        time: remoteFlights[i].time,
+                        fare: {}
+                    };
+                    newFlight.fare[fareAttr] = remoteFlights[i].fare;
+                    localFlights.push(newFlight);
+                } else {
+                    fareAttr = remoteFlights[i].class + remoteFlights[i].fareType;
+                    localFlights[j].fare[fareAttr] = remoteFlights[i].fare;
+                    isNewFlight = true;
+                }
+            }
+
+            return localFlights;
+        }
+
+        vm.departFlights = convertFlightToTableFormat(vm.departFlights);
+        vm.returnFlights = convertFlightToTableFormat(vm.returnFlights);
 
         vm.changeDepartFlightTableSort = function(attr) {
             if (attr === vm.widget.departFlightTable.orderAttr) {
@@ -227,14 +382,43 @@ angular.module('airlineReservationApp')
             }
         };
 
-        vm.isSortAscending = function(attr) {
+        vm.isDepartTableSortAscending = function(attr) {
             return vm.widget.departFlightTable.orderAttr === attr &&
                 vm.widget.departFlightTable.orderReverse === false;
         };
 
-        vm.isSortDescending = function(attr) {
+        vm.isDepartTableSortDescending = function(attr) {
             return vm.widget.departFlightTable.orderAttr === attr &&
                 vm.widget.departFlightTable.orderReverse === true;
+        };
+
+        vm.changeReturnFlightTableSort = function(attr) {
+            if (attr === vm.widget.returnFlightTable.orderAttr) {
+                vm.widget.returnFlightTable.orderReverse = !(vm.widget.returnFlightTable.orderReverse);
+            } else {
+                vm.widget.returnFlightTable.orderAttr = attr;
+                vm.widget.returnFlightTable.orderReverse = false;
+            }
+        }
+
+        vm.isReturnTableSortAscending = function(attr) {
+            return vm.widget.returnFlightTable.orderAttr === attr &&
+                vm.widget.returnFlightTable.orderReverse === false;
+        };
+
+        vm.isReturnTableSortDescending = function(attr) {
+            return vm.widget.returnFlightTable.orderAttr === attr &&
+                vm.widget.returnFlightTable.orderReverse === true;
+        };
+
+        vm.isValidFlightSelectForm = function() {
+            if (vm.departFlightHash !== undefined) {
+                if (vm.flightType === 'ROUND_TRIP' && vm.returnFlightHash !== undefined) {
+                    return true;
+                }
+                return false;
+            }
+            return false;
         };
 
         // passengerForm
