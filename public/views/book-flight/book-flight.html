@@ -1,0 +1,370 @@
+<div class="container">
+    <div class="row">
+        <div class="col-xs-12">
+            <ul class="progress-tracker progress-tracker--text progress-tracker--center">
+                <li class="progress-step" ng-class="{ 'is-complete': bookFlightVm.widget.flightSearchForm.isComplete && bookFlightVm.widget.currentForm !== 'flightSearchForm', 'is-active': bookFlightVm.widget.currentForm === 'flightSearchForm' }">
+                    <span class="progress-marker"></span>
+                    <span class="progress-text">
+                        Nhập thông tin chuyến bay
+                    </span>
+                </li>
+                <li class="progress-step" ng-class="{ 'is-complete': bookFlightVm.widget.flightSelectForm.isComplete && bookFlightVm.widget.currentForm !== 'flightSelectForm', 'is-active': bookFlightVm.widget.currentForm === 'flightSelectForm' }">
+                    <span class="progress-marker"></span>
+                    <span class="progress-text">
+                        Chọn chuyến bay
+                    </span>
+                </li>
+                <li class="progress-step" ng-class="{ 'is-complete': bookFlightVm.widget.passengerForm.isComplete && bookFlightVm.widget.currentForm !== 'passengerForm', 'is-active': bookFlightVm.widget.currentForm === 'passengerForm' }">
+                    <span class="progress-marker"></span>
+                    <span class="progress-text">
+                        Nhập thông tin hành khách
+                    </span>
+                </li>
+                <li class="progress-step" ng-class="{ 'is-complete': bookFlightVm.widget.verifyForm.isComplete && bookFlightVm.widget.currentForm !== 'verifyForm', 'is-active': bookFlightVm.widget.currentForm === 'verifyForm' }">
+                    <span class="progress-marker"></span>
+                    <span class="progress-text">
+                        Xác nhận
+                    </span>
+                </li>
+            </ul>
+            <form class="form center-block" ng-submit="bookFlightVm.onFlightSearchFormSubmit()" ng-show="bookFlightVm.widget.currentForm === 'flightSearchForm'" style="max-width: 720px;">
+                <div class="btn-group">
+                    <button type="button" class="btn btn-default" ng-click="bookFlightVm.flightSCO.type = 'ONE_WAY'" ng-class="{'btn-primary': bookFlightVm.flightSCO.type === 'ONE_WAY', 'btn-default': bookFlightVm.flightSCO.type !== 'ONE_WAY'}">Một chiều</button>
+                    <button type="button" class="btn btn-default" ng-click="bookFlightVm.flightSCO.type = 'ROUND_TRIP'" ng-class="{'btn-primary': bookFlightVm.flightSCO.type === 'ROUND_TRIP', 'btn-default': bookFlightVm.flightSCO.type !== 'ROUND_TRIP'}">Khứ hồi</button>
+                </div>
+                <fieldset>
+                    <legend>Địa điểm</legend>
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-6 form-group">
+                            <label>Sân bay đi</label>
+                            <select class="form-control" ng-model="bookFlightVm.flightSCO.departureAirport">
+                                <option ng-repeat="option in bookFlightVm.widget.departureAirportSelectOptions" value="{{ option.code }}">{{ option.name }} ({{ option.code }})
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-xs-12 col-sm-6 form-group">
+                            <label>Sân bay đến</label>
+                            <select class="form-control" ng-model="bookFlightVm.flightSCO.arrivalAirport">
+                                <option ng-repeat="option in bookFlightVm.widget.arrivalAirportSelectOptions" value="{{ option.code }}">{{ option.name }} ({{ option.code }})
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <legend>Thời gian</legend>
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-6 form-group">
+                            <label>Ngày đi</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" uib-datepicker-popup='dd/MM/yyyy' is-open="bookFlightVm.widget.departDatePicker.isOpened" ng-model="bookFlightVm.flightSCO.departDate" />
+                                <span class="input-group-btn">
+                                        <button type="button" class="btn btn-default" ng-click="bookFlightVm.openDepartDatePicker($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+                                    </span>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 col-sm-6 form-group" ng-show="bookFlightVm.flightSCO.type === 'ROUND_TRIP'">
+                            <label>Ngày về</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" uib-datepicker-popup='dd/MM/yyyy' is-open="bookFlightVm.widget.returnDatePicker.isOpened" ng-model="bookFlightVm.flightSCO.returnDate" />
+                                <span class="input-group-btn">
+                                    <button type="button" class="btn btn-default" ng-click="bookFlightVm.openReturnDatePicker($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <legend>Hành khách</legend>
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-4 form-group">
+                            <label>Người lớn</label>
+                            <select class="form-control" ng-model="bookFlightVm.flightSCO.numOfAdults" ng-options="option for option in bookFlightVm.widget.numOfAdultsSelectOptions">
+                            </select>
+                        </div>
+                        <div class="col-xs-12 col-sm-4 form-group">
+                            <label>Trẻ em</label>
+                            <select class="form-control" ng-model="bookFlightVm.flightSCO.numOfChildren" ng-options="option for option in bookFlightVm.widget.numOfChildrenSelectOptions">
+                            </select>
+                        </div>
+                        <div class="col-xs-12 col-sm-4 form-group">
+                            <label>Trẻ sơ sinh</label>
+                            <select class="form-control" ng-model="bookFlightVm.flightSCO.numOfInfants" ng-options="option for option in bookFlightVm.widget.numOfInfantsSelectOptions">
+                            </select>
+                        </div>
+                    </div>
+                </fieldset>
+                <button type="submit" class="btn btn-primary pull-right">Tiếp tục</button>
+            </form>
+            <form class="form" ng-submit="bookFlightVm.onFlightSelectFormSubmit()" ng-show="bookFlightVm.widget.currentForm === 'flightSelectForm'">
+                <!-- <table st-table="bookFlightVm.departFlightsDisplay" class="table table-striped table-hover"
+                st-safe-src="bookFlightVm.departFlights"> -->
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th ng-click="bookFlightVm.changeDepartFlightTableSort('id')">
+                                <span class="glyphicon glyphicon-chevron-up" ng-show="bookFlightVm.isSortAscending('id')"></span><span class="glyphicon glyphicon-chevron-down" ng-show="bookFlightVm.isSortDescending('id')"></span> Mã chuyến bay
+                            </th>
+                            <th ng-click="bookFlightVm.changeDepartFlightTableSort('departTime')">
+                                <span class="glyphicon glyphicon-chevron-up" ng-show="bookFlightVm.isSortAscending('departTime')"></span><span class="glyphicon glyphicon-chevron-down" ng-show="bookFlightVm.isSortDescending('departTime')"></span> Giờ khởi hành
+                            </th>
+                            <th ng-click="bookFlightVm.changeDepartFlightTableSort('seat')">
+                                <span class="glyphicon glyphicon-chevron-up" ng-show="bookFlightVm.isSortAscending('seat')"></span><span class="glyphicon glyphicon-chevron-down" ng-show="bookFlightVm.isSortDescending('seat')"></span> Số lượng ghế
+                            </th>
+                            <th class="hidden-xs">Phổ thông tiêu chuẩn</th>
+                            <th class="hidden-xs">Phổ thông tiêu chuẩn</th>
+                            <th class="hidden-xs">Phổ thông tiêu chuẩn</th>
+                            <th class="hidden-xs">Phổ thông tiêu chuẩn</th>
+                            <th class="hidden-xs">Phổ thông tiêu chuẩn</th>
+                            <th class="hidden-xs">Phổ thông tiêu chuẩn</th>
+                            <th class="visible-xs"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat-start="flight in bookFlightVm.departFlights | orderBy:bookFlightVm.widget.departFlightTable.orderAttr:bookFlightVm.widget.departFlightTable.orderReverse">
+                            <td>{{ flight.id }}</td>
+                            <td>{{ flight.departTime | date:'dd/MM/yyyy hh:mm' }}</td>
+                            <td>{{ flight.seat }}</td>
+                            <td class="hidden-xs">
+                                <label class="text-sm">
+                                    <input type="radio" name="fare"> 2000000</label>
+                            </td>
+                            <td class="hidden-xs">
+                                <label class="text-sm">
+                                    <input type="radio" name="fare"> 2000000</label>
+                            </td>
+                            <td class="hidden-xs">
+                                <label class="text-sm">
+                                    <input type="radio" name="fare"> 2000000</label>
+                            </td>
+                            <td class="hidden-xs">
+                                <label class="text-sm">
+                                    <input type="radio" name="fare"> 2000000</label>
+                            </td>
+                            <td class="hidden-xs">
+                                <label class="text-sm">
+                                    <input type="radio" name="fare"> 2000000</label>
+                            </td>
+                            <td class="hidden-xs">
+                                <label class="text-sm">
+                                    <input type="radio" name="fare"> 2000000</label>
+                            </td>
+                            <td class="visible-xs">
+                                <span class="glyphicon glyphicon-chevron-down" ng-show="!flight.expanded" ng-click="flight.expanded = true"></span>
+                                <span class="glyphicon glyphicon-chevron-up" ng-show="flight.expanded" ng-click="flight.expanded = false"></span>
+                            </td>
+                        </tr>
+                        <tr class="visible-xs" ng-show="flight.expanded" ng-repeat-end>
+                            <td class="row" colspan="4">
+                                <div class="col-xs-6">
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="fare"> Phổ thông tiêu chuẩn
+                                            <br> 2000000 VND
+                                        </label>
+                                    </div>
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="fare"> Phổ thông tiêu chuẩn
+                                            <br> 2000000 VND
+                                        </label>
+                                    </div>
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="fare"> Phổ thông tiêu chuẩn
+                                            <br> 2000000 VND
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-xs-6">
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="fare"> Phổ thông tiêu chuẩn
+                                            <br> 2000000 VND
+                                        </label>
+                                    </div>
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="fare"> Phổ thông tiêu chuẩn
+                                            <br> 2000000 VND
+                                        </label>
+                                    </div>
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="fare"> Phổ thông tiêu chuẩn
+                                            <br> 2000000 VND
+                                        </label>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table class="table table-striped table-hover" ng-if="bookFlightVm.flightSCO.type === 'ROUND_TRIP'">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Mã chuyến bay</th>
+                            <th>Giờ khởi hành</th>
+                            <th>Số lượng ghế</th>
+                            <th>Thương gia linh hoạt</th>
+                            <th>Thương gia tiêu chuẩn</th>
+                            <th>Phổ thông linh hoạt</th>
+                            <th>Phổ thông tiêu chuẩn</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="flight in bookFlightVm.returnFlights">
+                            <td>
+                                <input type="radio" name="return-flight">
+                            </td>
+                            <td>{{ flight.id }}</td>
+                            <td>{{ flight.priceClass }}</td>
+                            <td>{{ flight.seat }}</td>
+                            <td>{{ flight.price }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button type="submit" class="btn btn-primary pull-right">Tiếp tục</button>
+                <button type="button" class="btn btn-default pull-right" ng-click="bookFlightVm.onFlightSelectFormBack()">Quay về</button>
+            </form>
+            <form class="form center-block" ng-show="bookFlightVm.widget.currentForm === 'passengerForm'" style="max-width: 720px;">
+                <div ng-if="bookFlightVm.adultPassengers.length > 0">
+                    <fieldset ng-repeat="passenger in bookFlightVm.adultPassengers">
+                        <legend>Người lớn {{ $index + 1 }}</legend>
+                        <div class="form-group col-xs-12 col-sm-3">
+                            <select class="form-control" placeholder="Danh xưng" ng-model="passenger.title">
+                                <option value="Mr">Mr</option>
+                                <option value="Mr">Ms</option>
+                                <option value="Ms">Mrs</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-xs-12 col-sm-5">
+                            <input type="text" class="form-control" placeholder="Tên" ng-model="passenger.firstName">
+                        </div>
+                        <div class="form-group col-xs-12 col-sm-4">
+                            <input type="text" class="form-control" placeholder="Họ" ng-model="passenger.lastName">
+                        </div>
+                    </fieldset>
+                </div>
+                <div ng-if="bookFlightVm.childPassengers.length > 0">
+                    <fieldset ng-repeat="passenger in bookFlightVm.childPassengers">
+                        <legend>Trẻ em {{ $index + 1 }}</legend>
+                        <div class="form-group col-xs-12 col-sm-3">
+                            <select class="form-control" placeholder="Danh xưng" ng-model="passenger.title">
+                                <option value="Mr">Mr</option>
+                                <option value="Mr">Ms</option>
+                                <option value="Ms">Mrs</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-xs-12 col-sm-5">
+                            <input type="text" class="form-control" placeholder="Tên" ng-model="passenger.firstName">
+                        </div>
+                        <div class="form-group col-xs-12 col-sm-4">
+                            <input type="text" class="form-control" placeholder="Họ" ng-model="passenger.lastName">
+                        </div>
+                    </fieldset>
+                </div>
+                <div ng-if="bookFlightVm.infantPassengers.length > 0">
+                    <fieldset ng-repeat="passenger in bookFlightVm.infantPassengers">
+                        <legend>Trẻ sơ sinh {{ $index + 1 }}</legend>
+                        <div class="form-group col-xs-12 col-sm-3">
+                            <select class="form-control" placeholder="Danh xưng" ng-model="passenger.title">
+                                <option value="Mr">Mr</option>
+                                <option value="Mr">Ms</option>
+                                <option value="Ms">Mrs</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-xs-12 col-sm-5">
+                            <input type="text" class="form-control" placeholder="Tên" ng-model="passenger.firstName">
+                        </div>
+                        <div class="form-group col-xs-12 col-sm-4">
+                            <input type="text" class="form-control" placeholder="Họ" ng-model="passenger.lastName">
+                        </div>
+                    </fieldset>
+                </div>
+                <button type="submit" class="btn btn-primary pull-right" ng-click="bookFlightVm.onPassengerFormSubmit()">Tiếp tục</button>
+                <button type="button" class="btn btn-default pull-right" ng-click="bookFlightVm.onPassengerFormBack()">Quay về</button>
+            </form>
+            <div class="center-block verify-form" ng-if="bookFlightVm.widget.currentForm === 'verifyForm'" style="max-width: 720px;">
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Thông tin đặt chỗ</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div>
+                            <span class="info-title">Mã đặt chỗ:</span>
+                            <span class="info-content">ABCXYZ</span>
+                        </div>
+                        <div>
+                            <span class="info-title">Loại:</span>
+                            <span class="info-content">Khứ hồi</span>
+                        </div>
+                        <div>
+                            <span class="info-title">Chiều đi</span><br>
+                            <span class="info-content">
+                                <ul>
+                                    <li>Điểm đi: Ho Chi Minh (SGN)</li>
+                                    <li>Điểm đến: Ha Noi (HAN)</li>
+                                    <li>Khởi hành: 25/10/2016 15:00</li>
+                                </ul>
+                            </span>
+                        </div>
+                        <div>
+                            <span class="info-title">Chiều về</span><br>
+                            <span class="info-content">
+                                <ul>
+                                    <li>Điểm đi: Ho Chi Minh (SGN)</li>
+                                    <li>Điểm đến: Ha Noi (HAN)</li>
+                                    <li>Khởi hành: 25/10/2016 15:00</li>
+                                </ul>
+                            </span>
+                        </div>
+                        <div>
+                            <span class="info-title">Hành khách</span><br>
+                            <span class="info-content">
+                                <ul>
+                                    <li>Ông: Quang Trung</li>
+                                    <li>Bà: Lê Ngọc Hân</li>
+                                </ul>
+                            </span>
+                        </div>
+                        <div>
+                            <span class="info-title">Thanh toán</span><br>
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Tên dịch vụ</th>
+                                        <th>Giá tiền</th>
+                                    </tr>
+                                </thead>
+                                <tfoot>
+                                    <tr>
+                                        <td>Tổng</td>
+                                        <td>3000000</td>
+                                    </tr>
+                                </tfoot>
+                                <tbody>
+                                    <tr>
+                                        <td>Vé Ho Chi Minh (SGN) - Ha Noi (HAN), Thương gia tiêu chuẩn</td>
+                                        <td>2000000</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Vé Ha Noi (SGN) - Ho Chi Minh (HAN), Thương gia linh hoạt</td>
+                                        <td>1500000</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-primary pull-right" ng-click="bookFlightVm.onVerifyFormVerifyBooking()">Xác nhận</button>
+                <button type="button" class="btn btn-default pull-right" ng-click="bookFlightVm.onVerifyFormBack()">Quay về</button>
+            </div>
+            <div class="text-center" ng-if="bookFlightVm.widget.currentForm === 'finishForm'">
+                <h1>Bạn đã đặt chỗ thành công!</h1>
+                <a type="button" class="btn btn-primary" ui-sref="home">Quay về trang chủ</a>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html ng-app="airlineReservationApp">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Orion Airline</title>
+    <link rel="stylesheet" href="../node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../node_modules/bootstrap/dist/css/bootstrap-theme.min.css">
+    <link rel="stylesheet" href="styles/progress-tracker.css">
+    <link rel="stylesheet" href="styles/app.css">
+</head>
+
+<body>
+    <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+        <div class="container">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" ui-sref="home">ORION AIRLINE</a>
+            </div>
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse navbar-ex1-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a ui-sref="book-flight">ĐẶT CHUYẾN BAY</a></li>
+                </ul>
+            </div>
+            <!-- /.navbar-collapse -->
+        </div>
+    </nav>
+    <ui-view class="main-content"></ui-view>
+    <!-- vendors -->
+    <script src="../node_modules/angular/angular.min.js"></script>
+    <script src="../node_modules/angular-ui-router/release/angular-ui-router.min.js"></script>
+    <script src="../node_modules/angular-ui-bootstrap/dist/ui-bootstrap-tpls.js"></script>
+    <script src="../node_modules/jquery/dist/jquery.min.js"></script>
+    <script src="../node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+    <!-- app -->
+    <script src="scripts/app.js"></script>
+    <script src="scripts/app.config.js"></script>
+    <script src="scripts/app.constant.js"></script>
+    <!-- controllers -->
+    <script src="views/home/home.controller.js"></script>
+    <script src="views/book-flight/book-flight.controller.js"></script>
+
+    <!-- services -->
+
+    <!-- filter -->
+    <script src="views/book-flight/passenger-number.filter.js"></script>    
+</body>
+
+</html>
