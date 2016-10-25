@@ -1,5 +1,5 @@
 angular.module('airlineReservationApp')
-    .controller('BookFlightCtrl', function($scope, MAX_PASSENGER) {
+    .controller('BookFlightCtrl', function($scope, MAX_PASSENGER, bookingService) {
         var vm = this;
 
         vm.widget = {
@@ -9,20 +9,6 @@ angular.module('airlineReservationApp')
             returnDatePicker: {
                 isOpened: false
             },
-            departureAirportSelectOptions: [{
-                code: 'HAN',
-                name: 'Ha Noi',
-            }, {
-                code: 'SGN',
-                name: 'Ho Chi Minh',
-            }],
-            arrivalAirportSelectOptions: [{
-                code: 'HAN',
-                name: 'Ha Noi',
-            }, {
-                code: 'SGN',
-                name: 'Ho Chi Minh',
-            }],
             numOfAdultsSelectOptions: [1, 2, 3, 4, 5, 6],
             numOfChildrenSelectOptions: [],
             numOfInfantsSelectOptions: [],
@@ -46,8 +32,12 @@ angular.module('airlineReservationApp')
             returnFlightTable: {
                 orderAttr: 'time',
                 orderReverse: false
-            }
+            },
         };
+
+        function calculateNumOfPassengers() {
+            return vm.flightSCO.numOfAdults + vm.flightSCO.numOfChildren + vm.flightSCO.numOfInfants;
+        }
 
         // flightSearchForm
 
@@ -133,15 +123,15 @@ angular.module('airlineReservationApp')
                         vm.flightSearchForm.returnDatePicker.$setValidity('', false);
                     }
                 } else {
-                    if (vm.flightSCO.departDate !== undefined) {
+                    if (vm.flightSearchForm.departDatePicker !== undefined) {
                         vm.flightSearchForm.departDatePicker.$setValidity('', true);
                     }
-                    if (vm.flightSCO.returnDate !== undefined) {
+                    if (vm.flightSearchForm.returnDatePicker !== undefined) {
                         vm.flightSearchForm.returnDatePicker.$setValidity('', true);
                     }
                 }
             } else {
-                if (vm.flightSCO.departDate !== undefined) {
+                if (vm.flightSearchForm.departDatePicker !== undefined) {
                     vm.flightSearchForm.departDatePicker.$setValidity('', true);
                 }
             }
@@ -181,6 +171,40 @@ angular.module('airlineReservationApp')
             if (vm.isValidFlightSCO(vm.flightSCO)) {
                 vm.widget.flightSearchForm.isComplete = true;
                 vm.widget.currentForm = 'flightSelectForm';
+
+                vm.flightSCO.numOfPassengers = calculateNumOfPassengers();
+
+                console.log(vm.flightSCO);
+
+                vm.departFlights = null;
+                vm.returnFlights = null;
+
+                bookingService.searchFlight(vm.flightSCO)
+                    .then(function(res) {
+                        console.log(res.data);
+                        vm.departFlights = convertFlightToTableFormat(res.data);
+                        console.log(vm.departFlights);
+                    }, function(res) {
+                        console.log(res);
+                    });
+                if (vm.flightType === 'ROUND_TRIP') {
+                    var returnFlightSCO = {
+                        departureAirport: vm.flightSCO.arrivalAirport,
+                        arrivalAirport: vm.flightSCO.departureAirport,
+                        departDate: vm.flightSCO.returnDate,
+                        numOfPassengers: vm.flightSCO.numOfPassengers
+                    };
+
+                    bookingService.searchFlight(returnFlightSCO)
+                        .then(function(res) {
+                            console.log(res.data);
+                            vm.returnFlights = convertFlightToTableFormat(res.data);
+                            console.log(vm.returnFlights);
+                        }, function(res) {
+                            console.log(res);
+                        });
+                }
+
             } else {
 
             }
@@ -190,37 +214,83 @@ angular.module('airlineReservationApp')
             vm.selectedDepartFlight = flight;
         };
 
+        //ajax init call
+
+        $scope.$watch(function() {
+            return vm.flightSCO.departureAirport;
+        }, function(departureAirport) {
+            vm.widget.arrivalAirportSelectOptions = null;
+
+            if (departureAirport !== undefined && departureAirport !== '') {
+                bookingService.getArrivalAirports(departureAirport.code)
+                    .then(function(res) {
+                        console.log(res.data);
+                        vm.widget.arrivalAirportSelectOptions = res.data;
+                        // $scope.$apply(function() {
+                        //    vm.widget.arrivalAirportSelectOptions = res.data; 
+                        // });
+                    }, function(res) {
+                        console.log(res);
+                    });
+            }
+        });
+
+        bookingService.getDepartureAirports()
+            .then(function(res) {
+                console.log(res.data);
+                vm.widget.departureAirportSelectOptions = res.data;
+            }, function(res) {
+                console.log(res);
+            });
+
         // flightSelectForm
 
-        function decodeDepartFlight(hash) {
-            var departFlight = {};
+        function decodeFlightHash(hash) {
+            var flight = {};
             var tokens = hash.split(',');
 
-            departFlight.code = tokens[0];
-            departFlight.date = tokens[1];
-            departFlight.class = tokens[2];
-            departFlight.fareType = tokens[3];
+            flight.code = tokens[0];
+            flight.date = tokens[1];
+            flight.class = tokens[2];
+            flight.fareType = tokens[3];
 
-            return departFlight;
-        }
-
-        function decodeReturnFlight(hash) {
-            var returnFlight = {};
-            var tokens = hash.split(',');
-
-            returnFlight.code = tokens[0];
-            returnFlight.date = tokens[1];
-            returnFlight.class = tokens[2];
-            returnFlight.fareType = tokens[3];
-
-            return returnFlight;
+            return flight;
         }
 
         vm.onFlightSelectFormSubmit = function() {
-            var departFlight = decodeDepartFlight(vm.departFlightHash);
-            var returnFlight = decodeDepartFlight(vm.returnFlightHash);
-            console.log(departFlight);
-            console.log(returnFlight);
+            var departFlight = decodeFlightHash(vm.departFlightHash);
+            var booking = {
+                numOfPassengers: calculateNumOfPassengers(),
+                flightDetails: []
+            };
+
+            booking.flightDetails.push({
+                code: departFlight.code,
+                date: departFlight.date,
+                class: departFlight.class,
+                fareType: departFlight.fareType
+            });
+
+            if (vm.flightType === 'ROUND_TRIP') {
+                var returnFlight = decodeFlightHash(vm.returnFlightHash);
+                booking.flightDetails.push({
+                    code: returnFlight.code,
+                    date: returnFlight.date,
+                    class: returnFlight.class,
+                    fareType: returnFlight.fareType
+                });
+            }
+
+            console.log(booking);
+
+            bookingService.createBooking(booking)
+                .then(function(res) {
+                    console.log(res.data);
+                    vm.booking = res.data;
+                }, function(res) {
+                    console.log(res);
+                });
+
             vm.widget.flightSelectForm.isComplete = true;
             vm.widget.currentForm = 'passengerForm';
         };
@@ -228,110 +298,6 @@ angular.module('airlineReservationApp')
         vm.onFlightSelectFormBack = function() {
             vm.widget.currentForm = 'flightSearchForm';
         };
-
-        vm.departFlights = [{
-            code: "BL326",
-            departureAirport: "SGN",
-            arrivalAirport: "TBB",
-            date: "2016-10-05",
-            time: "08:45:00",
-            class: "Y",
-            fareType: "F",
-            numberOfSeats: 15,
-            fare: 10000
-        }, {
-            code: "BL326",
-            departureAirport: "SGN",
-            arrivalAirport: "TBB",
-            date: "2016-10-05",
-            time: "08:45:00",
-            class: "Y",
-            fareType: "E",
-            numberOfSeats: 15,
-            fare: 20000
-        }, {
-            code: "BL327",
-            departureAirport: "SGN",
-            arrivalAirport: "TBB",
-            date: "2016-10-05",
-            time: "08:45:00",
-            class: "Y",
-            fareType: "G",
-            numberOfSeats: 15,
-            fare: 300000
-        }, {
-            code: "BL326",
-            departureAirport: "SGN",
-            arrivalAirport: "TBB",
-            date: "2016-10-05",
-            time: "08:45:00",
-            class: "C",
-            fareType: "F",
-            numberOfSeats: 15,
-            fare: 40000
-        }, {
-            code: "BL327",
-            departureAirport: "SGN",
-            arrivalAirport: "TBB",
-            date: "2016-10-05",
-            time: "08:45:00",
-            class: "C",
-            fareType: "G",
-            numberOfSeats: 15,
-            fare: 600000
-        }];
-
-        vm.returnFlights = [{
-            code: "BL326",
-            departureAirport: "SGN",
-            arrivalAirport: "TBB",
-            date: "2016-10-05",
-            time: "08:45:00",
-            class: "Y",
-            fareType: "F",
-            numberOfSeats: 15,
-            fare: 10000
-        }, {
-            code: "BL326",
-            departureAirport: "SGN",
-            arrivalAirport: "TBB",
-            date: "2016-10-05",
-            time: "08:45:00",
-            class: "Y",
-            fareType: "E",
-            numberOfSeats: 15,
-            fare: 20000
-        }, {
-            code: "BL327",
-            departureAirport: "SGN",
-            arrivalAirport: "TBB",
-            date: "2016-10-05",
-            time: "08:45:00",
-            class: "Y",
-            fareType: "G",
-            numberOfSeats: 15,
-            fare: 300000
-        }, {
-            code: "BL326",
-            departureAirport: "SGN",
-            arrivalAirport: "TBB",
-            date: "2016-10-05",
-            time: "08:45:00",
-            class: "C",
-            fareType: "F",
-            numberOfSeats: 15,
-            fare: 40000
-        }, {
-            code: "BL327",
-            departureAirport: "SGN",
-            arrivalAirport: "TBB",
-            date: "2016-10-05",
-            time: "08:45:00",
-            class: "C",
-            fareType: "G",
-            numberOfSeats: 15,
-            fare: 600000
-        }];
 
         function convertFlightToTableFormat(remoteFlights) {
             var localFlights = [];
@@ -370,9 +336,6 @@ angular.module('airlineReservationApp')
             return localFlights;
         }
 
-        vm.departFlights = convertFlightToTableFormat(vm.departFlights);
-        vm.returnFlights = convertFlightToTableFormat(vm.returnFlights);
-
         vm.changeDepartFlightTableSort = function(attr) {
             if (attr === vm.widget.departFlightTable.orderAttr) {
                 vm.widget.departFlightTable.orderReverse = !(vm.widget.departFlightTable.orderReverse);
@@ -399,7 +362,7 @@ angular.module('airlineReservationApp')
                 vm.widget.returnFlightTable.orderAttr = attr;
                 vm.widget.returnFlightTable.orderReverse = false;
             }
-        }
+        };
 
         vm.isReturnTableSortAscending = function(attr) {
             return vm.widget.returnFlightTable.orderAttr === attr &&
@@ -423,12 +386,39 @@ angular.module('airlineReservationApp')
 
         // passengerForm
 
+        function calculateBookingTotalFare(flightDetails) {
+            var totalFare = 0;
+
+            for (var i = 0; i < flightDetails.length; i++) {
+                totalFare += Number(flightDetails[i].fare);
+            }
+
+            return totalFare;
+        }
+
+
         vm.onPassengerFormSubmit = function() {
             console.log(vm.adultPassengers);
             console.log(vm.childPassengers);
             console.log(vm.infantPassengers);
-            vm.widget.passengerForm.isComplete = true;
-            vm.widget.currentForm = 'verifyForm';
+
+            var passengers;
+            passengers = vm.adultPassengers.concat(vm.childPassengers);
+            passengers = passengers.concat(vm.infantPassengers);
+            console.log(passengers);
+
+            bookingService.addPassengers(vm.booking.id, passengers)
+                .then(function(res) {
+                    console.log(res.data);
+                    vm.booking.totalFare = calculateBookingTotalFare(vm.booking.flightDetails);
+                    vm.booking.passengers = passengers;
+                    console.log(vm.booking);
+
+                    vm.widget.passengerForm.isComplete = true;
+                    vm.widget.currentForm = 'verifyForm';
+                }, function(res) {
+                    console.log(res);
+                });
         };
 
         vm.onPassengerFormBack = function() {
@@ -475,8 +465,16 @@ angular.module('airlineReservationApp')
         };
 
         vm.onVerifyFormVerifyBooking = function() {
-            console.log("verify booking");
-            vm.widget.verifyForm.isComplete = true;
-            vm.widget.currentForm = 'finishForm';
+            bookingService.verifyBooking(vm.booking.id)
+                .then(function(res) {
+                    console.log(res.data);
+                    vm.widget.verifyForm.isComplete = true;
+                    vm.widget.currentForm = 'finishForm';
+                }, function(res) {
+                    console.log(res);
+                });
         };
+
+        vm.flightSCO.departDate = new Date('2016-10-05');
+        vm.flightSCO.returnDate = new Date('2016-10-06');
     });
