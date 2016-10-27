@@ -1,5 +1,5 @@
 angular.module('airlineReservationApp')
-	.config(function($stateProvider) {
+	.config(function($stateProvider, toastrConfig) {
 		$stateProvider.state({
             name: 'home',
             url: '/home',
@@ -14,5 +14,10 @@ angular.module('airlineReservationApp')
             templateUrl: 'views/book-flight/book-flight.html',
             controller: 'BookFlightCtrl',
             controllerAs: 'bookFlightVm',
+        });
+
+        angular.extend(toastrConfig, {
+            positionClass: 'toast-bottom-center',
+            timeOut: 2000
         });
 	});

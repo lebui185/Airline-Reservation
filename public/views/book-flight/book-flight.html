@@ -28,7 +28,7 @@
                 </li>
             </ul>
             <div class="form-container">
-                <form name="bookFlightVm.flightSearchForm" class="form center-block" ng-submit="bookFlightVm.onFlightSearchFormSubmit()" ng-show="bookFlightVm.widget.currentForm === 'flightSearchForm'" style="max-width: 720px;" novalidate>
+                <form name="bookFlightVm.flightSearchForm" class="form center-block" ng-submit="bookFlightVm.onFlightSearchFormSubmit()" ng-if="bookFlightVm.widget.currentForm === 'flightSearchForm'" style="max-width: 720px;" novalidate>
                     <div class="btn-group">
                         <button type="button" class="btn btn-default" ng-click="bookFlightVm.changeFlightType('ONE_WAY')" ng-class="{'btn-primary': bookFlightVm.flightType === 'ONE_WAY', 'btn-default': bookFlightVm.flightType !== 'ONE_WAY'}">Một chiều</button>
                         <button type="button" class="btn btn-default" ng-click="bookFlightVm.changeFlightType('ROUND_TRIP')" ng-class="{'btn-primary': bookFlightVm.flightType === 'ROUND_TRIP', 'btn-default': bookFlightVm.flightType !== 'ROUND_TRIP'}">Khứ hồi</button>
@@ -38,13 +38,31 @@
                         <div class="row">
                             <div class="col-xs-12 col-sm-6 form-group">
                                 <label>Sân bay đi (*)</label>
-                                <select class="form-control" ng-model="bookFlightVm.flightSCO.departureAirport" ng-options="airport.name + ' (' + airport.code + ')' for airport in bookFlightVm.widget.departureAirportSelectOptions" required>
-                                </select>
+                                <div class="remote-data-control-container">
+                                    <select name="departureAirportSelect" class="form-control" ng-model="bookFlightVm.flightSCO.departureAirport" ng-options="airport.name + ' (' + airport.code + ')' for airport in bookFlightVm.widget.departureAirportSelectOptions" ng-disabled="bookFlightVm.isLoadingDepartureAirport" required>
+                                    </select>
+                                    <div class="loading-widget-container spinner center-block" ng-show="bookFlightVm.isLoadingDepartureAirport">
+                                    </div>
+                                    <div ng-show="bookFlightVm.flightSearchForm.departureAirportSelect.$invalid && bookFlightVm.flightSearchForm.departureAirportSelect.$touched">
+                                        <span ng-show="bookFlightVm.flightSearchForm.departureAirportSelect.$error.required" class="error-message">
+                                            Sân bay đi không được để trống
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                             <div class="col-xs-12 col-sm-6 form-group">
                                 <label>Sân bay đến (*)</label>
-                                <select class="form-control" ng-model="bookFlightVm.flightSCO.arrivalAirport" ng-options="airport.name + ' (' + airport.code + ')' for airport in bookFlightVm.widget.arrivalAirportSelectOptions" required>
-                                </select>
+                                <div class="remote-data-control-container">
+                                    <select name="arrivalAirportSelect" class="form-control" ng-model="bookFlightVm.flightSCO.arrivalAirport" ng-options="airport.name + ' (' + airport.code + ')' for airport in bookFlightVm.widget.arrivalAirportSelectOptions" required ng-disabled="bookFlightVm.isLoadingArrivalAirport">
+                                    </select>
+                                    <div class="loading-widget-container spinner center-block" ng-show="bookFlightVm.isLoadingArrivalAirport">
+                                    </div>
+                                </div>
+                                <div ng-show="bookFlightVm.flightSearchForm.arrivalAirportSelect.$invalid && bookFlightVm.flightSearchForm.arrivalAirportSelect.$touched">
+                                    <span ng-show="bookFlightVm.flightSearchForm.arrivalAirportSelect.$error.required" class="error-message">
+                                        Sân bay đến không được để trống
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </fieldset>
@@ -54,10 +72,13 @@
                             <div class="col-xs-12 col-sm-6 form-group">
                                 <label>Ngày đi (*)</label>
                                 <div class="input-group">
-                                    <input type="text" name="departDatePicker" class="form-control" uib-datepicker-popup='dd/MM/yyyy' is-open="bookFlightVm.widget.departDatePicker.isOpened" ng-model="bookFlightVm.flightSCO.departDate" ng-change="bookFlightVm.validateTravelDate()" required/>
+                                    <input type="text" name="departDatePicker" class="form-control" uib-datepicker-popup='dd/MM/yyyy' datepicker-options="bookFlightVm.departDatePickerOptions" is-open="bookFlightVm.widget.departDatePicker.isOpened" ng-model="bookFlightVm.flightSCO.departDate" ng-change="bookFlightVm.validateTravelDate()" required/>
                                     <span class="input-group-btn">
                                         <button type="button" class="btn btn-default" ng-click="bookFlightVm.openDepartDatePicker($event)"><i class="glyphicon glyphicon-calendar"></i></button>
                                     </span>
+                                </div>
+                                <div ng-show="bookFlightVm.flightSearchForm.departDatePicker.$invalid && bookFlightVm.flightSearchForm.departDatePicker.$touched">
+                                    <span class="error-message">Ngày không hợp lệ</span>
                                 </div>
                             </div>
                             <div class="col-xs-12 col-sm-6 form-group" ng-if="bookFlightVm.flightType === 'ROUND_TRIP'">
@@ -65,8 +86,11 @@
                                 <div class="input-group">
                                     <input type="text" name="returnDatePicker" class="form-control" uib-datepicker-popup='dd/MM/yyyy' is-open="bookFlightVm.widget.returnDatePicker.isOpened" ng-model="bookFlightVm.flightSCO.returnDate" ng-change="bookFlightVm.validateTravelDate()" required/>
                                     <span class="input-group-btn">
-                                    <button type="button" class="btn btn-default" ng-click="bookFlightVm.openReturnDatePicker($event)"><i class="glyphicon glyphicon-calendar"></i></button>
-                                </span>
+                                        <button type="button" class="btn btn-default" ng-click="bookFlightVm.openReturnDatePicker($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+                                    </span>
+                                </div>
+                                <div ng-show="bookFlightVm.flightSearchForm.returnDatePicker.$invalid && bookFlightVm.flightSearchForm.returnDatePicker.$touched">
+                                    <span class="error-message">Ngày không hợp lệ</span>
                                 </div>
                             </div>
                         </div>
@@ -80,22 +104,29 @@
                                 </select>
                             </div>
                             <div class="col-xs-12 col-sm-4 form-group">
-                                <label>Trẻ em (2 < 12 tuổi)</label>
-                                <select class="form-control" ng-model="bookFlightVm.flightSCO.numOfChildren" ng-options="option for option in bookFlightVm.widget.numOfChildrenSelectOptions">
-                                </select>
+                                <label>Trẻ em (2
+                                    < 12 tuổi)</label>
+                                        <select class="form-control" ng-model="bookFlightVm.flightSCO.numOfChildren" ng-options="option for option in bookFlightVm.widget.numOfChildrenSelectOptions">
+                                        </select>
                             </div>
                             <div class="col-xs-12 col-sm-4 form-group">
-                                <label>Trẻ sơ sinh (< 2 tuổi)</label>
-                                <select class="form-control" ng-model="bookFlightVm.flightSCO.numOfInfants" ng-options="option for option in bookFlightVm.widget.numOfInfantsSelectOptions">
-                                </select>
+                                <label>Trẻ sơ sinh (
+                                    < 2 tuổi)</label>
+                                        <select class="form-control" ng-model="bookFlightVm.flightSCO.numOfInfants" ng-options="option for option in bookFlightVm.widget.numOfInfantsSelectOptions">
+                                        </select>
                             </div>
                         </div>
                     </fieldset>
                     <button type="submit" class="btn btn-primary pull-right" ng-disabled="bookFlightVm.flightSearchForm.$invalid">Tiếp tục</button>
                 </form>
-                <form class="form flight-select-form" name="bookFlightVm.flightSelectForm" ng-submit="bookFlightVm.onFlightSelectFormSubmit()" ng-show="bookFlightVm.widget.currentForm === 'flightSelectForm'">
+                <form class="form flight-select-form" name="bookFlightVm.flightSelectForm" ng-submit="bookFlightVm.onFlightSelectFormSubmit()" ng-if="bookFlightVm.isProgressLoading === false && bookFlightVm.widget.currentForm === 'flightSelectForm'">
                     <p>Chiều đi: {{ bookFlightVm.flightSCO.departureAirport.name }} ({{ bookFlightVm.flightSCO.departureAirport.code }}) - {{ bookFlightVm.flightSCO.arrivalAirport.name }} ({{ bookFlightVm.flightSCO.arrivalAirport.code }}) , Khởi hành: {{ bookFlightVm.flightSCO.departDate | date:'dd/MM/yyyy' }}</p>
-                    <table class="table table-striped">
+                    <div ng-show="bookFlightVm.isLoadingDepartFlight" class="spinner">
+                    </div>
+                    <div ng-if="bookFlightVm.departFlights.length === 0">
+                        <p class="error-message">Không tìm thấy chuyến bay theo yêu cầu</p>
+                    </div>
+                    <table class="table table-striped" ng-if="bookFlightVm.departFlights.length > 0">
                         <thead>
                             <tr>
                                 <th ng-click="bookFlightVm.changeDepartFlightTableSort('id')">
@@ -230,7 +261,12 @@
                     </table>
                     <div ng-if="bookFlightVm.flightType === 'ROUND_TRIP'">
                         <p>Chiều về: {{ bookFlightVm.flightSCO.arrivalAirport.name }} ({{ bookFlightVm.flightSCO.arrivalAirport.code }}) - {{ bookFlightVm.flightSCO.departureAirport.name }} ({{ bookFlightVm.flightSCO.departureAirport.code }}) , Khởi hành: {{ bookFlightVm.flightSCO.returnDate | date:'dd/MM/yyyy' }}</p>
-                        <table class="table table-striped">
+                        <div ng-show="bookFlightVm.isLoadingReturnFlight" class="spinner">
+                        </div>
+                        <div ng-if="bookFlightVm.returnFlights.length === 0">
+                            <p class="error-message">Không tìm thấy chuyến bay theo yêu cầu</p>
+                        </div>
+                        <table class="table table-striped" ng-if="bookFlightVm.returnFlights.length > 0">
                             <thead>
                                 <tr>
                                     <th ng-click="bookFlightVm.changeReturnFlightTableSort('id')">
@@ -367,7 +403,7 @@
                     <button type="submit" class="btn btn-primary pull-right" ng-disabled="(bookFlightVm.flightType === 'ONE_WAY' &&bookFlightVm.departFlightHash === undefined) || (bookFlightVm.flightType === 'ROUND_TRIP' && (bookFlightVm.departFlightHash === undefined || bookFlightVm.returnFlightHash === undefined))">Tiếp tục</button>
                     <button type="button" class="btn btn-default pull-right" ng-click="bookFlightVm.onFlightSelectFormBack()">Quay về</button>
                 </form>
-                <form class="form center-block" name="bookFlightVm.passengerForm" ng-show="bookFlightVm.widget.currentForm === 'passengerForm'" style="max-width: 720px;" novalidate>
+                <form class="form center-block" name="bookFlightVm.passengerForm" ng-if="bookFlightVm.isProgressLoading === false  && bookFlightVm.widget.currentForm === 'passengerForm'" style="max-width: 720px;" novalidate>
                     <div ng-if="bookFlightVm.adultPassengers.length > 0">
                         <fieldset ng-repeat="passenger in bookFlightVm.adultPassengers">
                             <legend>Người lớn {{ $index + 1 }}</legend>
@@ -379,10 +415,10 @@
                                 </select>
                             </div>
                             <div class="form-group col-xs-12 col-sm-5">
-                                <input type="text" class="form-control" placeholder="Tên" ng-model="passenger.firstName" required ng-pattern="/^[a-zA-Z ]*$/">
+                                <input type="text" class="form-control" placeholder="Tên" ng-model="passenger.firstName" required ng-pattern="bookFlightVm.vietnameseNamePattern">
                             </div>
                             <div class="form-group col-xs-12 col-sm-4">
-                                <input type="text" class="form-control" placeholder="Họ" ng-model="passenger.lastName" required ng-pattern="/^[a-zA-Z ]*$/">
+                                <input type="text" class="form-control" placeholder="Họ" ng-model="passenger.lastName" required ng-pattern="bookFlightVm.vietnameseNamePattern">
                             </div>
                         </fieldset>
                     </div>
@@ -397,10 +433,10 @@
                                 </select>
                             </div>
                             <div class="form-group col-xs-12 col-sm-5">
-                                <input type="text" class="form-control" placeholder="Tên" ng-model="passenger.firstName" required ng-pattern="/^[a-zA-Z ]*$/">
+                                <input type="text" class="form-control" placeholder="Tên" ng-model="passenger.firstName" required ng-pattern="bookFlightVm.vietnameseNamePattern">
                             </div>
                             <div class="form-group col-xs-12 col-sm-4">
-                                <input type="text" class="form-control" placeholder="Họ" ng-model="passenger.lastName" required ng-pattern="/^[a-zA-Z ]*$/">
+                                <input type="text" class="form-control" placeholder="Họ" ng-model="passenger.lastName" required ng-pattern="bookFlightVm.vietnameseNamePattern">
                             </div>
                         </fieldset>
                     </div>
@@ -415,17 +451,17 @@
                                 </select>
                             </div>
                             <div class="form-group col-xs-12 col-sm-5">
-                                <input type="text" class="form-control" placeholder="Tên" ng-model="passenger.firstName" required ng-pattern="/^[a-zA-Z ]*$/">
+                                <input type="text" class="form-control" placeholder="Tên" ng-model="passenger.firstName" required ng-pattern="bookFlightVm.vietnameseNamePattern">
                             </div>
                             <div class="form-group col-xs-12 col-sm-4">
-                                <input type="text" class="form-control" placeholder="Họ" ng-model="passenger.lastName" required ng-pattern="/^[a-zA-Z ]*$/">
+                                <input type="text" class="form-control" placeholder="Họ" ng-model="passenger.lastName" required ng-pattern="bookFlightVm.vietnameseNamePattern">
                             </div>
                         </fieldset>
                     </div>
                     <button type="submit" class="btn btn-primary pull-right" ng-click="bookFlightVm.onPassengerFormSubmit()" ng-disabled="bookFlightVm.passengerForm.$invalid">Tiếp tục</button>
                     <button type="button" class="btn btn-default pull-right" ng-click="bookFlightVm.onPassengerFormBack()">Quay về</button>
                 </form>
-                <div class="center-block verify-form" ng-if="bookFlightVm.widget.currentForm === 'verifyForm'" style="max-width: 720px;">
+                <div class="center-block verify-form" ng-if="bookFlightVm.isProgressLoading === false && bookFlightVm.widget.currentForm === 'verifyForm'" style="max-width: 720px;">
                     <div class="panel panel-primary">
                         <div class="panel-heading">
                             <h3 class="panel-title">Thông tin đặt chỗ</h3>
@@ -486,7 +522,7 @@
                                     <tfoot>
                                         <tr>
                                             <td><strong>Tổng</strong></td>
-                                            <td class="text-right"><strong>{{ bookFlightVm.booking.totalFare }}</strong></td>
+                                            <td class="text-right"><strong>{{ bookFlightVm.booking.totalFare }} VND</strong></td>
                                         </tr>
                                     </tfoot>
                                     <tbody>
@@ -504,9 +540,11 @@
                     <button type="button" class="btn btn-primary pull-right" ng-click="bookFlightVm.onVerifyFormVerifyBooking()">Xác nhận</button>
                     <button type="button" class="btn btn-default pull-right" ng-click="bookFlightVm.onVerifyFormBack()">Quay về</button>
                 </div>
-                <div class="text-center" ng-if="bookFlightVm.widget.currentForm === 'finishForm'">
+                <div class="text-center" ng-if="bookFlightVm.isProgressLoading === false && bookFlightVm.widget.currentForm === 'finishForm'">
                     <h1>Bạn đã đặt chỗ thành công!</h1>
                     <a type="button" class="btn btn-primary" ui-sref="home">Quay về trang chủ</a>
+                </div>
+                <div ng-show="bookFlightVm.isProgressLoading === true" class="spinner">
                 </div>
             </div>
         </div>

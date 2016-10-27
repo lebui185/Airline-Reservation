@@ -1,6 +1,10 @@
 angular.module('airlineReservationApp')
-    .controller('BookFlightCtrl', function($scope, MAX_PASSENGER, bookingService) {
+    .controller('BookFlightCtrl', function($scope, bookingService, MAX_PASSENGER, toastr) {
         var vm = this;
+
+        vm.departDatePickerOptions = {
+            minDate: new Date()
+        }
 
         vm.widget = {
             departDatePicker: {
@@ -27,13 +31,23 @@ angular.module('airlineReservationApp')
             currentForm: 'flightSearchForm',
             departFlightTable: {
                 orderAttr: 'time',
-                orderReverse: false
+                orderReverse: false,
             },
             returnFlightTable: {
                 orderAttr: 'time',
-                orderReverse: false
+                orderReverse: false,
             },
         };
+
+        vm.vietnameseNamePattern = '^[a-zA-Z\\s_ÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂưăạảấầẩẫậắằẳẵặẹẻẽềềểỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪễệỉịọỏốồổỗộớờởỡợụủứừỬỮỰỲỴÝỶỸửữựỳỵỷỹ]+$';
+
+        vm.isProgressLoading = false;
+        vm.isLoadingDepartFlight = false;
+        vm.isLoadingReturnFlight = false;
+        vm.isLoadingDepartureAirport = false;
+        vm.isLoadingArrivalAirport = false;
+
+        vm.isLoadingDepartFlightFirstTime = true;
 
         function calculateNumOfPassengers() {
             return vm.flightSCO.numOfAdults + vm.flightSCO.numOfChildren + vm.flightSCO.numOfInfants;
@@ -179,13 +193,17 @@ angular.module('airlineReservationApp')
                 vm.departFlights = null;
                 vm.returnFlights = null;
 
+                vm.isLoadingDepartFlight = true;
+
                 bookingService.searchFlight(vm.flightSCO)
                     .then(function(res) {
                         console.log(res.data);
+                        vm.isLoadingDepartFlight = false;
                         vm.departFlights = convertFlightToTableFormat(res.data);
                         console.log(vm.departFlights);
                     }, function(res) {
-                        console.log(res);
+                        toastr.error('Tìm kiếm chuyến bay chặng đi thất bại');
+                        vm.isLoadingDepartFlight = false;
                     });
                 if (vm.flightType === 'ROUND_TRIP') {
                     var returnFlightSCO = {
@@ -195,13 +213,19 @@ angular.module('airlineReservationApp')
                         numOfPassengers: vm.flightSCO.numOfPassengers
                     };
 
+                    vm.widget.returnFlightTable.isLoading = true;
+
+                    vm.isLoadingReturnFlight = true;
+
                     bookingService.searchFlight(returnFlightSCO)
                         .then(function(res) {
                             console.log(res.data);
+                            vm.isLoadingReturnFlight = false;
                             vm.returnFlights = convertFlightToTableFormat(res.data);
                             console.log(vm.returnFlights);
                         }, function(res) {
-                            console.log(res);
+                            toastr.error('Tìm kiếm chuyến bay chặng về thất bại');
+                            vm.isLoadingReturnFlight = false;
                         });
                 }
 
@@ -221,27 +245,36 @@ angular.module('airlineReservationApp')
         }, function(departureAirport) {
             vm.widget.arrivalAirportSelectOptions = null;
 
-            if (departureAirport !== undefined && departureAirport !== '') {
-                bookingService.getArrivalAirports(departureAirport.code)
-                    .then(function(res) {
-                        console.log(res.data);
-                        vm.widget.arrivalAirportSelectOptions = res.data;
-                        // $scope.$apply(function() {
-                        //    vm.widget.arrivalAirportSelectOptions = res.data; 
-                        // });
-                    }, function(res) {
-                        console.log(res);
-                    });
+            if (departureAirport !== undefined) {
+                vm.isLoadingArrivalAirport = true;
+                if (departureAirport !== undefined && departureAirport !== '') {
+                    bookingService.getArrivalAirports(departureAirport.code)
+                        .then(function(res) {
+                            vm.isLoadingArrivalAirport = false;
+                            console.log(res.data);
+                            vm.widget.arrivalAirportSelectOptions = res.data;
+                        }, function(res) {
+                            vm.isLoadingArrivalAirport = false;
+                            toastr.error('Lấy danh sách sân bay đến thất bại');
+                        });
+                }
             }
+
         });
 
+
+    vm.isLoadingDepartureAirport = true;
         bookingService.getDepartureAirports()
             .then(function(res) {
                 console.log(res.data);
+                vm.isLoadingDepartureAirport = false;
                 vm.widget.departureAirportSelectOptions = res.data;
             }, function(res) {
-                console.log(res);
+                vm.isLoadingDepartureAirport = false;
+                toastr.error('Lấy danh sách sân bay đi thất bại');
             });
+
+        vm.isLoadingDepartFlightFirstTime = false;
 
         // flightSelectForm
 
@@ -283,16 +316,19 @@ angular.module('airlineReservationApp')
 
             console.log(booking);
 
+            vm.isProgressLoading = true;
+
             bookingService.createBooking(booking)
                 .then(function(res) {
+                    vm.isProgressLoading = false;
+                    vm.widget.flightSelectForm.isComplete = true;
+                    vm.widget.currentForm = 'passengerForm';
                     console.log(res.data);
                     vm.booking = res.data;
                 }, function(res) {
-                    console.log(res);
+                    vm.isProgressLoading = false;
+                    toastr.error('Đặt chỗ thất bại');
                 });
-
-            vm.widget.flightSelectForm.isComplete = true;
-            vm.widget.currentForm = 'passengerForm';
         };
 
         vm.onFlightSelectFormBack = function() {
@@ -407,8 +443,11 @@ angular.module('airlineReservationApp')
             passengers = passengers.concat(vm.infantPassengers);
             console.log(passengers);
 
+            vm.isProgressLoading = true;
+
             bookingService.addPassengers(vm.booking.id, passengers)
                 .then(function(res) {
+                    vm.isProgressLoading = false;
                     console.log(res.data);
                     vm.booking.totalFare = calculateBookingTotalFare(vm.booking.flightDetails);
                     vm.booking.passengers = passengers;
@@ -417,7 +456,8 @@ angular.module('airlineReservationApp')
                     vm.widget.passengerForm.isComplete = true;
                     vm.widget.currentForm = 'verifyForm';
                 }, function(res) {
-                    console.log(res);
+                    vm.isProgressLoading = false;
+                    toastr.error('Cập nhật hành khách thất bại');
                 });
         };
 
@@ -465,16 +505,20 @@ angular.module('airlineReservationApp')
         };
 
         vm.onVerifyFormVerifyBooking = function() {
+            vm.isProgressLoading = true;
+
             bookingService.verifyBooking(vm.booking.id)
                 .then(function(res) {
+                    vm.isProgressLoading = false;
                     console.log(res.data);
                     vm.widget.verifyForm.isComplete = true;
                     vm.widget.currentForm = 'finishForm';
                 }, function(res) {
+                    vm.isProgressLoading = false;
                     console.log(res);
                 });
         };
 
-        vm.flightSCO.departDate = new Date('2016-10-05');
-        vm.flightSCO.returnDate = new Date('2016-10-06');
+        vm.flightSCO.departDate = new Date('2017-01-08');
+        vm.flightSCO.returnDate = new Date('2017-01-09');
     });
